@@ -2,9 +2,9 @@
 
 This document records how the code in this repository relates to the numbers
 published in the WebMedia 2026 paper, including every place where the original
-analysis notebooks (kept unchanged in `notebooks/legacy/`) differ from the
+analysis notebooks (kept unchanged in `legacy/notebooks/`) differ from the
 paper text or from each other. It was written while consolidating the
-notebooks into the `fundrel` package and should be kept up to date.
+original notebooks into the numbered notebooks in `notebooks/` and should be kept up to date.
 
 Status legend: **verified** = value appears in a saved notebook output;
 **code available, not verified** = the package implements the analysis but no
@@ -15,20 +15,20 @@ this result was found.
 
 | Paper result | Status | Where |
 |---|---|---|
-| Raw dataset sizes (598,971 / 557,586 messages) | verified | `notebooks/legacy/LIWC.ipynb` |
-| Collection period (27 Sep – 14 Nov 2022) | verified (WhatsApp) | `notebooks/legacy/LDA_wpp.ipynb` |
-| Users and groups (15,286 / 240; 14,810 / 178) | code available, not verified | `fundrel.data.build` |
-| Filtered datasets (5,167 / 8,526) | verified | `notebooks/legacy/analise_dos_dados.ipynb` |
-| Table 1: unique messages and token statistics | code available, not verified | `fundrel.descriptive` |
-| Figure 2: messages per day | verified | `results/legacy_paper_run/figures/` |
-| Table 2: named entities | verified (see §4) | `notebooks/legacy/Reconhecimento_entidade.ipynb` |
-| Sec. 4.2: retrieval with Elasticsearch | not in repository (re-implemented) | `fundrel.search` |
-| Table 3 and Sec. 4.3: polarity descriptives and tests | ported from the revision analysis (see §7) | `fundrel.polarity` |
-| Table 4: number of topics | verified | LDA/PTM/BERTopic notebooks |
+| Raw dataset sizes (598,971 / 557,586 messages) | verified | `legacy/notebooks/LIWC.ipynb` |
+| Collection period (27 Sep – 14 Nov 2022) | verified (WhatsApp) | `legacy/notebooks/LDA_wpp.ipynb` |
+| Users and groups (15,286 / 240; 14,810 / 178) | code available, not verified | `01_datasets.ipynb` |
+| Filtered datasets (5,167 / 8,526) | verified | `legacy/notebooks/analise_dos_dados.ipynb` |
+| Table 1: unique messages and token statistics | code available, not verified | `01_datasets.ipynb` |
+| Figure 2: messages per day | verified | `legacy/results/paper_run/figures/` |
+| Table 2: named entities | verified (see §4) | `legacy/notebooks/Reconhecimento_entidade.ipynb` |
+| Sec. 4.2: retrieval with Elasticsearch | not in repository (re-implemented) | `03_message_retrieval.ipynb` |
+| Table 3 and Sec. 4.3: polarity descriptives and tests | ported from the revision analysis (see §7) | `04_polarity.ipynb` |
+| Table 4: number of topics | verified | `05`–`07` notebooks |
 | Table 5: C_V, diversity, IRBO | verified | idem |
 | Table 5: C_NPMI for LDA and PTM | **inconsistent** (see §5) | idem |
-| Tables 6–7: topic words | verified | `results/legacy_paper_run/` |
-| Sec. 4.5: LIWC (49/63, Holm, φ, category %) | ported from the revision analysis; **not** what the legacy notebook computes (see §6) | `fundrel.liwc` |
+| Tables 6–7: topic words | verified | `legacy/results/paper_run/` |
+| Sec. 4.5: LIWC (49/63, Holm, φ, category %) | ported from the revision analysis; **not** what the legacy notebook computes (see §6) | `08_liwc.ipynb` |
 
 ## 2. Dataset construction
 
@@ -36,7 +36,7 @@ The following steps are applied before the keyword filters. They are part of
 the paper run but are **not described in the paper**:
 
 1. **Excluded accounts.** 11 hashed member IDs (WhatsApp) and 25 (Telegram) are
-   removed. They are listed in `config/params.yaml`. The reason for excluding
+   removed. They are listed in `notebooks/utils.py`. The reason for excluding
    them (e.g. bots or the research team's own monitoring accounts) should be
    documented here by the authors.
 2. **Messages without text** (`text_content_anonymous` missing) are dropped.
@@ -50,7 +50,7 @@ occurs anywhere in the preprocessed text, not as a whole word. Short exclusion
 terms therefore also match inside other words (`pt` in `adapto`, `pl` in
 `exemplo`, `13` in `2013`), and `reino` matches `treino`. This is the behaviour
 that produced 5,167 and 8,526 messages and is the default
-(`filters.match: substring`). Setting `match: word` gives whole-word matching
+(`WHOLE_WORD_MATCH = False` in `notebooks/utils.py`). Setting it to `True` gives whole-word matching
 and different counts.
 
 **Preprocessing happens before filtering** (accents and stopwords removed), so
@@ -60,9 +60,9 @@ is a stem that matches *carismático/carismática*.
 ## 3. Statistics in Table 1
 
 The definitions of "unique messages" and of the token counts are not stated in
-the notebooks. `fundrel.descriptive` uses: unique = distinct raw texts; tokens =
+the notebooks. `01_datasets.ipynb` uses: unique = distinct raw texts; tokens =
 whitespace tokens of the preprocessed text of the unique messages. Confirm
-against the paper values with `python -m fundrel verify`.
+against the paper values in the last cell of `01_datasets.ipynb`.
 
 ## 4. Named entity recognition
 
@@ -73,7 +73,7 @@ against the paper values with `python -m fundrel verify`.
   says "XLM-RoBERTa"; consider naming the checkpoint).
 * The two XLM-RoBERTa columns in Table 2 come from different settings: FW.Br
   texts were truncated to 1,000 characters, FT.Br texts were not. Both settings
-  are reproduced through `ner.max_chars` in the config.
+  are reproduced in `02_named_entities.ipynb`.
 * Table 2 translates `acredito` ("I believe") as *belief*.
 
 ## 5. Topic modeling
@@ -91,18 +91,17 @@ against the paper values with `python -m fundrel verify`.
   | PTM · FT.Br | 28 | 0.024 (k = 6) | 0.0208 |
 
   The conclusions (BERTopic has the highest coherence) do not change. The
-  package reports every metric for the C_V-selected model.
-* **Random seeds.** LDA was trained without `random_state`; the package now
-  sets `seed: 42`, so LDA results will differ slightly from the paper.
+  notebooks report every metric for the C_V-selected model.
+* **Random seeds.** LDA was trained without `random_state`; `05_topics_lda.ipynb`
+  sets `random_state=42`, so LDA results will differ slightly from the paper.
   PTM used `seed=42` but multiple workers, which tomotopy warns is not
-  deterministic; the package trains with one worker. BERTopic fixes the UMAP
+  deterministic; `06_topics_ptm.ipynb` trains with one worker. BERTopic fixes the UMAP
   seed.
 * **Coherence top-n differs across models.** LDA coherence used gensim's
   default (top 20 words); PTM and BERTopic used the top 10 words.
 * **Two IRBO implementations.** LDA and PTM used the `rbo` package; BERTopic
-  used a truncated RBO written in the notebook (p = 0.9). The package computes
-  both for every model (`irbo_rbo_package`, `irbo_truncated`) and `verify`
-  compares each model with the one used in the paper.
+  used a truncated RBO written in the notebook (p = 0.9). The notebooks keep
+  the same choice (`irbo` for LDA/PTM, `irbo_truncated` for BERTopic, in `utils.py`).
 * The paper says the metrics were computed "as implemented in the OCTIS
   library"; the notebooks use gensim's `CoherenceModel` and the implementations
   above, not OCTIS.
@@ -113,7 +112,7 @@ The values in Section 4.5 (63 categories, 49 significant, 40 after
 Holm-Bonferroni, φ ≤ 0.033 with median 0.008, *relig* 12.20% vs 10.11%, *anger*
 p = 0.41, *anx* p = 0.46) were produced during the reviewer-response phase
 (August 2026) by a separate script run on FW.Br and FT.Br, not by
-`notebooks/legacy/LIWC.ipynb`. That script is now `fundrel.liwc`:
+`legacy/notebooks/LIWC.ipynb`. That script is now `08_liwc.ipynb`:
 
 * text: raw `text_content_anonymous` (accents kept);
 * tokens: NLTK `word_tokenize(text.lower(), language="portuguese")`, minus
@@ -136,7 +135,7 @@ has these problems:
 1. In the section "Filtro religioso com exclusão de palavras políticas", the
    WhatsApp data receives only the religious filter (cell 53), while Telegram
    receives both filters. The file
-   `results/legacy_paper_run/liwc/comparacao_proporcoes_categorias_filtroPolitico.csv`
+   `legacy/results/paper_run/liwc/comparacao_proporcoes_categorias_filtroPolitico.csv`
    therefore compares FT.Br with a WhatsApp set that is **not** FW.Br.
 2. The dictionary parser treats the category header (lines between `%`) as
    words, producing spurious categories (`1`, `121`, `358`, `article`, `Unknown`).
@@ -153,7 +152,7 @@ came from this notebook and was replaced by the values above.
 
 `score_sentiment` is the LeIA score stored in the BATMAN export (computed at
 ingestion), not recomputed here. The tests in Section 4.3 were produced in the
-same reviewer-response analysis and are ported to `fundrel.polarity`:
+same reviewer-response analysis and are ported to `04_polarity.ipynb`:
 
 * categories: negative < −0.05, neutral [−0.05, 0.05], positive > 0.05;
 * Mann-Whitney U (two-sided, asymptotic) and Cliff's δ, FW.Br vs FT.Br, with
@@ -175,19 +174,19 @@ same reviewer-response analysis and are ported to `fundrel.polarity`:
   history. Recommended: publish a new version of both CSV files with
   `id_persona` hashed or dropped and remove the old LFS objects from the
   repository history.
-* Files produced by `python -m fundrel retrieval` contain message text,
+* Files produced by `03_message_retrieval.ipynb` contain message text,
   including the "exposed" message with a private person's business details.
-  They are written to `results/generated/` (git-ignored) and must not be
+  They are written to `results/03_message_retrieval/` (git-ignored) and must not be
   committed.
-* `data/processed/*_message_ids.csv` lists the selected messages without text
+* `datasets/processed/*_message_ids.csv` lists the selected messages without text
   so that the selection can be shared and audited.
 
 ## 9. Third-party resources
 
-`data/external/LIWC2007_Portugues_win.dic` is the Brazilian Portuguese LIWC
+`datasets/LIWC2007_Portugues_win.dic` is the Brazilian Portuguese LIWC
 2007 dictionary (Balage Filho et al., 2013). Check whether its licence allows
 redistribution; if not, remove it from the repository and replace it with
-download instructions in `data/README.md`.
+download instructions in the README.
 
 ## 10. Environment
 

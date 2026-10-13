@@ -1,13 +1,13 @@
-# Core (dataset construction, polarity, LIWC, verification)
+# Notebooks 01, 03, 04, 08
 pandas>=2.0
 numpy>=1.24
 scipy>=1.10
-pyyaml>=6.0
 unidecode>=1.3
 nltk>=3.8
 matplotlib>=3.7
+jupyter
 
-# Topic modeling
+# Notebooks 05-07 (topic modeling)
 gensim>=4.3
 rbo>=0.1.3
 tomotopy>=0.12
@@ -16,13 +16,7 @@ sentence-transformers>=2.2
 umap-learn>=0.5
 hdbscan>=0.8.33
 
-# Named entity recognition
+# Notebook 02 (named entities); also run: python -m spacy download pt_core_news_sm
 spacy>=3.7
 transformers>=4.40
 torch>=2.0
-
-# Optional: Elasticsearch index for interactive exploration
-# elasticsearch>=8.0
-
-# Tests
-pytest>=7.0

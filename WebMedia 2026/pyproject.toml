@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fundrel"
+version = "1.0.0"
+description = "Reproducible pipeline for 'Religious Fundamentalism and Far-Right Ideology in Brazilian WhatsApp and Telegram Groups' (WebMedia 2026)"
+requires-python = ">=3.10"
+readme = "README.md"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
